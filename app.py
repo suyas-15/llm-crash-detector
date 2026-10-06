@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from pyPDF2 import PdfReader
+from pypdf import PdfReader
 from groq import Groq
 
 st.title("LLM-Crash Detector - Hallucination Guard")
