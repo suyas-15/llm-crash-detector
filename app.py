@@ -1,10 +1,7 @@
 import streamlit as st
 import os
-from dotenv import load_dotenv
 from pypdf import PdfReader
 from groq import Groq
-
-load_dotenv()
 
 st.title("LLM-Crash Detector - Hallucination Guard")
 
