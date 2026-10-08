@@ -45,7 +45,7 @@ if uploaded_file:
             SAWAL: {query}
             """
             response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",,
+                model="llama-3.3-70b-versatile",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0
             )
