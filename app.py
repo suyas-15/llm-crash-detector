@@ -6,9 +6,17 @@ from groq import Groq
 
 load_dotenv()
 
+def get_crash_score(prompt):
+    score = 0
+    risky_words = ["ignore", "delete", "format", "system", "hack", "bypass", "override", "jailbreak"]
+    for word in risky_words:
+        if word in prompt.lower():
+            score += 20
+    return min(score, 100)
+
 st.set_page_config(page_title="LLM-Crash Detector")
-st.title("LLM-Crash Detector - Day 2 Final")
-st.write("Complete Hallucination Guard")
+st.title("LLM-Crash Detector - Day 3")
+st.write("Complete Hallucination Guard + Crash Score")
 
 uploaded_file = st.file_uploader("PDF Upload Karo", type="pdf")
 
@@ -17,38 +25,31 @@ if uploaded_file:
     pdf_text = ""
     for page in reader.pages:
         pdf_text += page.extract_text() or ""
-
     st.success(f"PDF Read Ho Gaya! {len(pdf_text)} characters")
 
     query = st.text_input("Sawal pucho")
 
     if query:
-        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+        score = get_crash_score(query)
+        st.warning(f"⚠ Crash Score: {score}%")
 
-        prompt = f"""
-        Tumhe ek Resume diya gaya hai. Sirf isi resume se jawab do.
-        Agar jawab resume me nahi hai toh EXACT bolna: "Iska jawab PDF me nahi hai"
-        Jhootha jawab kabhi mat dena. Hallucinate mat karo.
-
-        Instructions:
-        1. Context se bahar ka jawab mat do
-        2. Agar info nahi hai toh mana kar do
-        3. Confidence ke saath jhooth mat bolo
-
-        RESUME TEXT:
-        {pdf_text[:15000]}
-
-        SAWAL: {query}
-        JAWAB:
-        """
-
-        response = client.chat.completions.create(
-            model="llama3-8b-8192",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0
-        )
-
-        st.write("### Jawab:")
-        st.write(response.choices[0].message.content)
+        if score >= 60:
+            st.error("Ye prompt risky hai! LLM crash ho sakta hai.")
+        else:
+            api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
+            client = Groq(api_key=api_key)
+            prompt = f"""
+            Tumhe ek Resume diya gaya hai. Sirf isi resume se jawab do.
+            Agar jawab resume me nahi hai toh EXACT bolna: "Iska jawab PDF me nahi hai"
+            RESUME TEXT: {pdf_text[:15000]}
+            SAWAL: {query}
+            """
+            response = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0
+            )
+            st.write("### Jawab:")
+            st.write(response.choices[0].message.content)
 else:
     st.info("Pehle PDF upload karo")
